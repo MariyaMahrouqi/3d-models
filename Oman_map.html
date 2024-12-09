@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapbox - Highlight Oman with Markers</title>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { width: 100%; height: 100vh; }
+        .custom-marker {
+            background-color: red;
+            border-radius: 50%;
+            width: 15px;
+            height: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+        .marker-label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #000;
+            text-align: center;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        // Replace 'YOUR_MAPBOX_ACCESS_TOKEN' with your Mapbox token
+        mapboxgl.accessToken = 'pk.eyJ1IjoibWFyaXlhbmFzc2VyOTkiLCJhIjoiY2x3Z2F6azMyMDFneDJra3hlM3dnbjFrbSJ9.SvPhJWsosTJFLC4c---WTQ';
+
+        // Initialize the map with a minimal style
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: {
+                "version": 8,
+                "sources": {},
+                "layers": []
+            }, // Blank map style
+            center: [57.583, 21.512], // Center on Oman
+            zoom: 5
+        });
+
+        // Add GeoJSON data for Oman and render it
+        map.on('load', function () {
+            fetch('https://raw.githubusercontent.com/MariyaMahrouqi/3d-models/refs/heads/main/oman_.geojson')
+                .then(response => response.json())
+                .then(geojsonData => {
+                    // Add GeoJSON source
+                    map.addSource('oman', {
+                        'type': 'geojson',
+                        'data': geojsonData
+                    });
+
+                    // Add the fill layer for Oman
+                    map.addLayer({
+                        'id': 'oman-fill',
+                        'type': 'fill',
+                        'source': 'oman',
+                        'layout': {},
+                        'paint': {
+                            'fill-color': '#0080ff', // Blue fill
+                            'fill-opacity': 0.8
+                        }
+                    });
+
+                    // Add a border layer for Oman
+                    map.addLayer({
+                        'id': 'oman-border',
+                        'type': 'line',
+                        'source': 'oman',
+                        'layout': {},
+                        'paint': {
+                            'line-color': '#0000ff', // Blue border
+                            'line-width': 2,
+                            'line-opacity': 1
+                        }
+                    });
+                })
+                .catch(error => console.error('Error loading GeoJSON:', error));
+
+            // Add markers for Muscat, Nizwa, and Salalah
+            const locations = [
+                { name: "Muscat", coordinates: [58.5453, 23.6102] },
+                { name: "Nizwa", coordinates: [57.5291, 22.9338] },
+                { name: "Salalah", coordinates: [54.0980, 17.0197] }
+            ];
+
+            locations.forEach(location => {
+                // Create a custom marker element
+                const markerElement = document.createElement('div');
+                markerElement.className = 'custom-marker';
+
+                // Add the marker to the map
+                new mapboxgl.Marker(markerElement)
+                    .setLngLat(location.coordinates)
+                    .setPopup(
+                        new mapboxgl.Popup({ offset: 25 }) // Add popup on marker
+                            .setHTML(`<div class="marker-label">${location.name}</div>`)
+                    )
+                    .addTo(map);
+            });
+        });
+
+        // Add zoom and rotation controls to the map
+        map.addControl(new mapboxgl.NavigationControl());
+    </script>
+</body>
+</html>
